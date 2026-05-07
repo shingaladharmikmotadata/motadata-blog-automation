@@ -1,0 +1,103 @@
+name: Generate Blog Post
+
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "Blog topic title (e.g. 'Observability vs Monitoring')"
+        required: true
+        type: string
+      focus_keyword:
+        description: "Primary SEO keyword (e.g. 'observability vs monitoring')"
+        required: true
+        type: string
+      funnel_stage:
+        description: "Funnel stage"
+        required: true
+        type: choice
+        options:
+          - TOFU
+          - MOFU
+          - BOFU
+        default: TOFU
+      module:
+        description: "Motadata module this blog supports"
+        required: true
+        type: choice
+        options:
+          - APM
+          - Real User Monitoring
+          - SLO
+          - Log Monitoring
+          - Network Observability
+          - NCCM
+          - Hybrid Infrastructure
+          - Service Management (ITSM)
+          - ITAM & CMDB
+          - Patch Management
+          - Agentic AI
+          - MSP
+          - General / Cross-product
+      word_count:
+        description: "Target word count"
+        required: false
+        type: choice
+        options:
+          - "1500-2000"
+          - "2000-2500"
+          - "2500+"
+        default: "2000-2500"
+      internal_link:
+        description: "Capability page URL to link to (optional, e.g. /products/application-performance-monitoring-tool/distributed-tracing)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate blog with Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Generate a complete Motadata blog post with these parameters:
+            - Topic: ${{ github.event.inputs.topic }}
+            - Focus keyword: "${{ github.event.inputs.focus_keyword }}"
+            - Funnel stage: ${{ github.event.inputs.funnel_stage }}
+            - Motadata module: ${{ github.event.inputs.module }}
+            - Target word count: ${{ github.event.inputs.word_count }} words
+            - Internal link target: ${{ github.event.inputs.internal_link || 'most relevant product page' }}
+            - Requested by: ${{ github.actor }}
+
+            Steps to follow:
+            1. Read CLAUDE.md for full project context, brand voice, and product information
+            2. Read format/blog-format.md for the exact 7-block structure and YAML template
+            3. Read brand/brand-voice.md for tone, vocabulary, and patterns
+            4. Check planned/blog-gaps.md and planned/knowledge-base.md for any existing keyword data for this topic
+            5. Generate the complete blog post following all format rules exactly
+            6. Create a safe filename: convert the topic to kebab-case (lowercase, hyphens)
+            7. Save the blog to blogs/draft/[filename].md
+            8. Create a new branch named: blog/[filename]-[date in YYYYMMDD format]
+            9. Commit the file with message: "feat: generate blog draft - ${{ github.event.inputs.topic }}"
+            10. Open a pull request with:
+                - Title: "Blog Draft: ${{ github.event.inputs.topic }}"
+                - Body including: keyword, funnel stage, module, word count, and a checklist of format items to verify
+
+            Quality checks before saving:
+            - All 8 YAML fields present
+            - focus_keyword appears in H1, meta_title, and first 100 words
+            - All 7 blocks present (YAML → Title → Definition → Hook → Key Takeaways → Main Content → How Motadata Helps → FAQ)
+            - Minimum 2 internal links to motadata.com pages
+            - No forbidden words: robust, powerful, cutting-edge, next-gen, leverage, solution (standalone)
+            - FAQ has at least 4 Q&As
+          claude_args: >-
+            --max-turns 20
+            --model claude-sonnet-4-6

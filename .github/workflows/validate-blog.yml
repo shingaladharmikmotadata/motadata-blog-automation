@@ -1,0 +1,83 @@
+name: Validate Blog Post
+
+on:
+  pull_request:
+    paths:
+      - "blogs/**/*.md"
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate blog with Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            A new blog post has been submitted in this PR. Validate it against the Motadata blog format specification.
+
+            Steps:
+            1. Read CLAUDE.md to understand the project and brand rules
+            2. Read format/blog-format.md for the complete format specification
+            3. Read brand/brand-voice.md for vocabulary rules
+            4. Find all changed .md files in blogs/ (use git diff --name-only HEAD~1 HEAD or check the PR files)
+            5. For each blog file, run this checklist:
+
+            **YAML Frontmatter (Block 1)**
+            - [ ] Has `title` field
+            - [ ] Has `source_url` field (must be https://www.motadata.com/blog/[slug]/)
+            - [ ] Has `updated` field
+            - [ ] Has `meta_title` field (≤60 characters including " | Motadata")
+            - [ ] Has `meta_description` field (≤155 characters)
+            - [ ] Has `focus_keyword` field
+            - [ ] Has `secondary_keywords` field (list of at least 3)
+            - [ ] Has `funnel_stage` field (TOFU, MOFU, or BOFU)
+
+            **Content Structure**
+            - [ ] Block 2: H1 title present after YAML
+            - [ ] Block 2: Source URL line present
+            - [ ] Block 3: Definition blockquote present (> **keyword** is...)
+            - [ ] Block 4: Hook paragraphs (at least 2 paragraphs before Key Takeaways)
+            - [ ] Block 5: "## Key Takeaways" section with 5+ bold bullet points
+            - [ ] Block 6: Main content with H2/H3 structure (at least 3 H2s)
+            - [ ] Block 7: "## How Motadata" section present
+            - [ ] Block 7: "## Frequently Asked Questions" section with 4+ Q&As
+
+            **SEO Quality**
+            - [ ] focus_keyword appears in H1
+            - [ ] focus_keyword appears in meta_title
+            - [ ] focus_keyword appears in meta_description
+            - [ ] focus_keyword appears in first 150 words of body
+            - [ ] At least 2 internal links to https://www.motadata.com pages
+            - [ ] At least 1 comparison table (if topic supports it)
+
+            **Word Count**
+            - [ ] Body content is 1,500–2,500 words (estimate based on content)
+
+            **Brand Compliance**
+            - [ ] No forbidden words: "robust", "powerful", "cutting-edge", "next-gen", "leverage" (as a verb)
+            - [ ] No exclamation marks
+            - [ ] No passive voice as primary sentence structure
+            - [ ] Uses second person ("your team", "you") not third person about the reader
+
+            **Format each issue as:**
+            ❌ [Issue] — [specific location in file]
+            ✅ [Passing check]
+            ⚠️ [Suggestion/recommendation]
+
+            Post your review as a PR review comment with:
+            - A summary score (X/20 checks passing)
+            - All failed checks listed with specific fixes
+            - All passing checks confirmed
+            - An overall recommendation: APPROVE / REQUEST_CHANGES / COMMENT
+          claude_args: >-
+            --max-turns 10
+            --model claude-sonnet-4-6

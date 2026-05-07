@@ -1,0 +1,101 @@
+name: Blog Request
+description: Request a new blog post from Claude
+title: "[Blog Request]: "
+labels: ["blog-request"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Blog Request
+        Fill in the details below. Once submitted, tag `@claude` in a comment to start generation immediately, or the workflow will pick it up automatically.
+
+  - type: input
+    id: topic
+    attributes:
+      label: Blog Topic
+      description: What should the blog be about?
+      placeholder: "e.g. Observability vs Monitoring: What's the Difference and Why It Matters"
+    validations:
+      required: true
+
+  - type: input
+    id: keyword
+    attributes:
+      label: Focus Keyword
+      description: The primary SEO keyword (lowercase, as it would be searched on Google)
+      placeholder: "e.g. observability vs monitoring"
+    validations:
+      required: true
+
+  - type: input
+    id: volume
+    attributes:
+      label: Search Volume & KD (from Ahrefs)
+      description: If you have Ahrefs data, add it here
+      placeholder: "e.g. Vol: 1,200 | KD: 8 | TP: 1,100"
+
+  - type: dropdown
+    id: funnel_stage
+    attributes:
+      label: Funnel Stage
+      options:
+        - TOFU — Educational / "What Is X" / Best Practices
+        - MOFU — Comparison / "How to Choose" / Evaluation
+        - BOFU — Decision / Why Motadata / ROI
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Which Motadata product does this blog support?
+      options:
+        - APM (Application Performance Monitoring)
+        - Real User Monitoring (RUM)
+        - SLO (Service Level Objectives)
+        - Log Monitoring
+        - Network Observability
+        - NCCM (Network Configuration & Compliance)
+        - Hybrid Infrastructure Monitoring
+        - Service Management (ITSM)
+        - ITAM & CMDB
+        - Patch Management
+        - Agentic AI & Orchestration
+        - MSP for ServiceOps
+        - General / Cross-product (ObserveOps)
+        - General / Cross-product (ServiceOps)
+    validations:
+      required: true
+
+  - type: input
+    id: internal_link
+    attributes:
+      label: Internal Link Target (capability page)
+      description: Which Motadata capability page should this blog link to?
+      placeholder: "e.g. /products/application-performance-monitoring-tool/distributed-tracing"
+
+  - type: dropdown
+    id: word_count
+    attributes:
+      label: Target Word Count
+      options:
+        - "1,500–2,000 words (definition / explainer)"
+        - "2,000–2,500 words (best practices / how-to)"
+        - "2,500+ words (comprehensive guide)"
+      default: 1
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional Notes
+      description: Any specific angles, personas to target, competitors to mention, or content requirements?
+      placeholder: "Target NOC Engineers and SREs. Include a comparison table with Monitoring vs Observability. Link to the APM and Log Monitoring product pages."
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        **After submitting:** Tag `@claude` in a comment to start immediate generation.
+
+        Example: `@claude Please generate this blog post following the format in format/blog-format.md and brand voice in brand/brand-voice.md`
